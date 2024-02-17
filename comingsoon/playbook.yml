@@ -18,7 +18,7 @@
 
   - name: tag the docker image
   
-  command: docker tag comingsoon-page-kuber imas10/comingsoon-page-kuber:latest
+    command: docker tag comingsoon-page-kuber imas10/comingsoon-page-kuber:latest
 
   - name: push image to dockerhub
     command: docker push imas10/comingsoon-page-kuber:latest
