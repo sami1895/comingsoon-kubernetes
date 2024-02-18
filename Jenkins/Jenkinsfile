@@ -18,44 +18,54 @@ pipeline {
               """
             }
         }
-        stage('Delete Cluster') {
-            steps {
-                script {
-                    sh "minikube delete -p comingsoon-cluster"
-                    sleep(time: 180, unit: "SECONDS")
-                }
-            }
+        stage('Minikube Cluster Management') {
+      when { // Check if cluster exists and use conditional logic
+        expression {
+          return sh(script: 'minikube status | grep -q Running', returnStdout: true) == 0
         }
-        
-        stage('Create Cluster') {
-            steps {
-                script {
-                    sh """
-                    minikube start -p comingsoon-cluster --nodes=2
-		    """
-                }
-            }
+      }
+      steps {
+        script {
+          sh 'minikube delete -p comingsoon-cluster'
         }
-        
-        stage('Create Namespace') {
-            steps {
-                script {
-                    sh "kubectl create namespace comingsoon"
-                }
-            }
-        }
-        
-        stage('Deploy') {
-            steps {
-                script {
-                    sh """
-                    cd comingsoon/k8s
-                    kubectl apply -f deployment.yaml -n comingsoon
-                    kubectl apply -f services.yaml -n comingsoon
-                    """
-                }
-            }
-        }
+      }
     }
+
+    stage('Create Minikube Cluster') {
+      steps {
+        script {
+          sh 'minikube start -p comingsoon-cluster --nodes=2'
+        }
+      }
+    }
+
+    stage('Create Namespace') {
+      steps {
+        container('kubectl') {
+          // Use kubectl plugin or dedicated tools for Kubernetes interactions
+          sh 'kubectl create namespace comingsoon'
+        }
+      }
+    }
+
+    stage('Deploy to Kubernetes') {
+      steps {
+        container('kubectl') {
+          sh """
+            cd comingsoon/k8s
+            kubectl apply -f deployment.yaml -n comingsoon
+            kubectl apply -f services.yaml -n comingsoon
+          """
+        }
+      }
+    }
+  }
+
+  post {
+    success {
+      // Clean up resources or run post-deployment tasks
+      sh 'minikube stop -p comingsoon-cluster' // Optional cleanup
+    }
+  }
 }
 
