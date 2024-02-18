@@ -18,7 +18,7 @@ pipeline {
               """
             }
         }
-        stage('Minikube Cluster Management') {
+         stage('Minikube Cluster Management') {
       when { // Check if cluster exists and use conditional logic
         expression {
           return sh(script: 'minikube status | grep -q Running', returnStdout: true) == 0
@@ -59,12 +59,4 @@ pipeline {
         }
       }
     }
-
-  post {
-    success {
-      // Clean up resources or run post-deployment tasks
-      sh 'minikube stop -p comingsoon-cluster' // Optional cleanup
-    }
   }
-}
-}
