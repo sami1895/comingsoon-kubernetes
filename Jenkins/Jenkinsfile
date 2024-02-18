@@ -1,55 +1,70 @@
 pipeline {
-  pipeline {
-    agent any
+  agent any
 
-    environment {
-		DOCKERHUB_CREDENTIALS=credentials('dockerhub')
-	}
-    stages {
-        stage('Docker Login') {
-            steps {
-              sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
-            }
-        }
-        stage('Build & push Dockerfile') {
-            steps {
-              sh """
-              cd comingsoon-kubernetes/comingsoon/
-              ansible-playbook playbook.yml
-              """
-            }
-        }
-        stage('Delete Cluster') {
-            steps {
-                  sh "eksctl delete cluster --name comingsoon-cluster"
-                  sleep(time: 180, unit: "SECONDS")
-                }
-            }
-        stage('Create Cluster') {
-            steps {
-                  sh """
-                  eksctl create cluster --name comingsoon-cluster --nodes-min=2
-                  aws eks update-kubeconfig --name comingsoon-cluster
-                  """
-                }
-            }
-        stage('Create Namespace') {
-            steps {
-                  sh "kubectl create namespace comingsoon"
-                }
-            }
-        stage('Deploy') {
-            steps {
-                  sh """
-                  cd Kubernetes/comingsoon/k8s
-                  kubectl -n comingsoon apply -f deployment.yaml
-                  kubectl -n comingsoon apply -f services.yaml
-                  """
-                }
-            }
-        }
+  environment {
+    // Use secure credentials management (e.g., Jenkins Credentials or a secrets store)
+    DOCKERHUB_CREDENTIALS_ID = credentialsId('dockerhub-credentials') // Example using Credentials plugin
+  }
+
+  stages {
+    stage('Build & Push Docker Image') {
+      steps {
+          sh """
+          cd comingsoon/
+          ansible-playbook playbook.yml
+          """
+      }
     }
-}
+  }
+    stage('Minikube Cluster Management') {
+      when { // Check if cluster exists and use conditional logic
+        expression {
+          return sh(script: 'minikube status | grep -q Running', returnStdout: true) == 0
+        }
+      }
+      steps {
+        script {
+          sh 'minikube delete -p comingsoon-cluster'
+        }
+      }
+    }
 
+    stage('Create Minikube Cluster') {
+      steps {
+        script {
+          sh 'minikube start -p comingsoon-cluster --nodes=2'
+        }
+      }
+    }
+
+    stage('Create Namespace') {
+      steps {
+        container('kubectl') {
+          // Use kubectl plugin or dedicated tools for Kubernetes interactions
+          sh 'kubectl create namespace comingsoon'
+        }
+      }
+    }
+
+    stage('Deploy to Kubernetes') {
+      steps {
+        container('kubectl') {
+          sh """
+            cd comingsoon/k8s
+            kubectl apply -f deployment.yaml -n comingsoon
+            kubectl apply -f services.yaml -n comingsoon
+          """
+        }
+      }
+    }
+  }
+
+  post {
+    success {
+      // Clean up resources or run post-deployment tasks
+      sh 'minikube stop -p comingsoon-cluster' // Optional cleanup
+    }
+  }
+}
 
 
