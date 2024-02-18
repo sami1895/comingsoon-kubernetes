@@ -32,7 +32,8 @@ pipeline {
                 script {
                     sh """
                     minikube start -p comingsoon-cluster --nodes=2
-                    """
+                    kubectl config use-context minikube
+		    """
                 }
             }
         }
