@@ -27,8 +27,8 @@ pipeline {
         stage('Create Cluster') {
             steps {
                   sh """
-                  eksctl create cluster --name comingsoon-cluster --nodes-min=2
-                  eks update-kubeconfig --name comingsoon-cluster
+                  kubectl create cluster --name comingsoon-cluster --nodes-min=2
+                  kubectl update-kubeconfig --name comingsoon-cluster
                   """
                 }
             }
