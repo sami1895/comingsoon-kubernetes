@@ -1,72 +1,63 @@
 pipeline {
-  agent any
+    agent any
 
-  environment {
-    // Use secure credentials management (e.g., Jenkins Credentials or a secrets store)
-    DOCKERHUB_CREDENTIALS_ID = credentialsId('dockerhub-credentials') // Example using Credentials plugin
-  }
-
-  stages {
-    stage('Build & Push Docker Image') {
-      steps {
-        sh """
-          cd comingsoon/
-          // Use Docker pipeline plugin or dedicated tools for building and pushing images
-          docker build -t comingsoon-image .
-          docker login -u $DOCKERHUB_CREDENTIALS_USR, --password-stdin < credentials('dockerhub-credentials')
-          docker push comingsoon-image
-        """
-      }
-    }
-  }
-    stage('Minikube Cluster Management') {
-      when { // Check if cluster exists and use conditional logic
-        expression {
-          return sh(script: 'minikube status | grep -q Running', returnStdout: true) == 0
+    environment {
+		DOCKERHUB_CREDENTIALS=credentials('dockerhub')
+	}
+    stages {
+        stage('Docker Login') {
+            steps {
+              sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
+            }
         }
-      }
-    }
-      steps {
-        script {
-          sh 'minikube delete -p comingsoon-cluster'
+        stage('Build & push Dockerfile') {
+            steps {
+              sh """
+              cd comingsoon/
+              ansible-playbook playbook.yml
+              """
+            }
         }
-      }
 
-    stage('Create Minikube Cluster') {
-      steps {
-        script {
-          sh 'minikube start -p comingsoon-cluster --nodes=2'
+
+stage('Delete Cluster') {
+            steps {
+                script {
+                    sh "minikube delete -p comingsoon-cluster"
+                    sleep(time: 180, unit: "SECONDS")
+                }
+            }
         }
-      }
-    }
-
-    stage('Create Namespace') {
-      steps {
-        container('kubectl') {
-          // Use kubectl plugin or dedicated tools for Kubernetes interactions
-          sh 'kubectl create namespace comingsoon'
+        
+        stage('Create Cluster') {
+            steps {
+                script {
+                    sh """
+                    minikube start -p comingsoon-cluster --nodes=2
+		    """
+                }
+            }
         }
-      }
-    }
-
-    stage('Deploy to Kubernetes') {
-      steps {
-        container('kubectl') {
-          sh """
-            cd comingsoon/k8s
-            kubectl apply -f deployment.yaml -n comingsoon
-            kubectl apply -f services.yaml -n comingsoon
-          """
+        
+        stage('Create Namespace') {
+            steps {
+                script {
+                    sh "kubectl create namespace comingsoon"
+                }
+            }
         }
-      }
+        
+        stage('Deploy') {
+            steps {
+                script {
+                    sh """
+                    cd comingsoon/k8s
+                    kubectl apply -f deployment.yaml -n comingsoon
+                    kubectl apply -f services.yaml -n comingsoon
+                    """
+                }
+            }
+        }
     }
-
-  post {
-    success {
-      // Clean up resources or run post-deployment tasks
-      sh 'minikube stop -p comingsoon-cluster' // Optional cleanup
-    }
-  }
 }
-
 
