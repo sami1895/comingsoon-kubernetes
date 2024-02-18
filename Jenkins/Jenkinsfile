@@ -60,4 +60,11 @@ pipeline {
       }
     }
   }
+
+  post {
+    success {
+      // Clean up resources or run post-deployment tasks
+      sh 'minikube stop -p comingsoon-cluster' // Optional cleanup
+    }
+  }
 }
