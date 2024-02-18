@@ -18,19 +18,19 @@ pipeline {
         """
       }
     }
-
+  }
     stage('Minikube Cluster Management') {
       when { // Check if cluster exists and use conditional logic
         expression {
           return sh(script: 'minikube status | grep -q Running', returnStdout: true) == 0
         }
       }
+    }
       steps {
         script {
           sh 'minikube delete -p comingsoon-cluster'
         }
       }
-    }
 
     stage('Create Minikube Cluster') {
       steps {
@@ -60,7 +60,6 @@ pipeline {
         }
       }
     }
-  }
 
   post {
     success {
@@ -69,3 +68,5 @@ pipeline {
     }
   }
 }
+}
+
