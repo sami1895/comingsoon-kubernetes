@@ -49,7 +49,7 @@ pipeline {
             steps {
                 script {
                     sh """
-                    cd comingsoon-kubernetes/comingsoon/k8s
+                    cd comingsoon/k8s
                     kubectl apply -f deployment.yaml -n comingsoon
                     kubectl apply -f services.yaml -n comingsoon
                     """
