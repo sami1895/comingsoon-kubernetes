@@ -1,4 +1,5 @@
 pipeline {
+  pipeline {
     agent any
 
     environment {
@@ -10,54 +11,43 @@ pipeline {
               sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
             }
         }
-    stage('Build & push Dockerfile') {
+        stage('Build & push Dockerfile') {
             steps {
               sh """
-              cd comingsoon/
+              cd comingsoon-kubernetes/comingsoon/
               ansible-playbook playbook.yml
               """
             }
         }
-
-
-    stage('Delete Cluster') {
+        stage('Delete Cluster') {
             steps {
-                script {
-                    sh "minikube delete -p comingsoon-cluster"
-                    sleep(time: 180, unit: "SECONDS")
+                  sh "minikube delete cluster --name comingsoon-cluster"
+                  sleep(time: 180, unit: "SECONDS")
                 }
             }
-        }
-        
-    stage('Create Cluster') {
+        stage('Create Cluster') {
             steps {
-                script {
-                    sh """
-                    minikube start -p comingsoon-cluster --nodes=2
-		    """
+                  sh """
+                  create cluster --name comingsoon-cluster --nodes=2
+                  """
                 }
             }
-        }
-        
-    stage('Create Namespace') {
+        stage('Create Namespace') {
             steps {
-                script {
-                    sh "kubectl create namespace comingsoon"
+                  sh "kubectl create namespace comingsoon"
                 }
             }
-        }
-        
-stage('Deploy') {
+        stage('Deploy') {
             steps {
-                script {
-                    sh """
-                    cd comingsoon/k8s
-                    kubectl apply -f deployment.yaml -n comingsoon
-                    kubectl apply -f services.yaml -n comingsoon
-                    """
+                  sh """
+                  cd comingsoon/k8s
+                  kubectl -n comingsoon apply -f deployment.yaml
+                  kubectl -n comingsoon apply -f services.yaml
+                  """
                 }
             }
         }
     }
 }
+
 
