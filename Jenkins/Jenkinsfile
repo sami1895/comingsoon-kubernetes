@@ -20,35 +20,43 @@ pipeline {
         }
         stage('Delete Cluster') {
             steps {
-                  sh "kubectl delete cluster --name comingsoon-cluster"
-                  sleep(time: 180, unit: "SECONDS")
+                script {
+                    sh "minikube delete -p comingsoon-cluster"
+                    sleep(time: 180, unit: "SECONDS")
                 }
             }
+        }
+        
         stage('Create Cluster') {
             steps {
-                  sh """
-                  kubectl create cluster --name comingsoon-cluster --nodes-min=2
-                  kubectl update-kubeconfig --name comingsoon-cluster
-                  """
+                script {
+                    sh """
+                    minikube start -p comingsoon-cluster --nodes=2
+                    kubectl config use-context minikube
+                    """
                 }
             }
+        }
+        
         stage('Create Namespace') {
             steps {
-                  sh "kubectl create namespace comingsoon"
+                script {
+                    sh "kubectl create namespace comingsoon"
                 }
             }
+        }
+        
         stage('Deploy') {
             steps {
-                  sh """
-                  cd Kubernetes/comingsoon/k8s
-                  kubectl -n comingsoon apply -f deployment.yaml
-                  kubectl -n comingsoon apply -f services.yaml
-                  """
+                script {
+                    sh """
+                    cd Kubernetes/comingsoon/k8s
+                    kubectl apply -f deployment.yaml -n comingsoon
+                    kubectl apply -f services.yaml -n comingsoon
+                    """
                 }
             }
         }
     }
-
-
 
 
