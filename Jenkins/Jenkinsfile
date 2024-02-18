@@ -10,7 +10,7 @@ pipeline {
               sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
             }
         }
-        stage('Build & push Dockerfile') {
+    stage('Build & push Dockerfile') {
             steps {
               sh """
               cd comingsoon/
@@ -20,7 +20,7 @@ pipeline {
         }
 
 
-stage('Delete Cluster') {
+    stage('Delete Cluster') {
             steps {
                 script {
                     sh "minikube delete -p comingsoon-cluster"
@@ -29,7 +29,7 @@ stage('Delete Cluster') {
             }
         }
         
-        stage('Create Cluster') {
+    stage('Create Cluster') {
             steps {
                 script {
                     sh """
@@ -39,7 +39,7 @@ stage('Delete Cluster') {
             }
         }
         
-        stage('Create Namespace') {
+    stage('Create Namespace') {
             steps {
                 script {
                     sh "kubectl create namespace comingsoon"
@@ -47,7 +47,7 @@ stage('Delete Cluster') {
             }
         }
         
-        stage('Deploy') {
+stage('Deploy') {
             steps {
                 script {
                     sh """
