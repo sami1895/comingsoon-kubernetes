@@ -1,24 +1,25 @@
 pipeline {
-    agent any
+  agent any
 
-    environment {
-		DOCKERHUB_CREDENTIALS=credentials('dockerhub')
-	}
-    stages {
-        stage('Docker Login') {
-            steps {
-              sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
-            }
-        }
-        stage('Build & push Dockerfile') {
-            steps {
-              sh """
-              cd comingsoon/
-              ansible-playbook playbook.yml
-              """
-            }
-        }
-         stage('Minikube Cluster Management') {
+  environment {
+    // Use secure credentials management (e.g., Jenkins Credentials or a secrets store)
+    DOCKERHUB_CREDENTIALS_ID = credentialsId('dockerhub-credentials') // Example using Credentials plugin
+  }
+
+  stages {
+    stage('Build & Push Docker Image') {
+      steps {
+        sh """
+          cd comingsoon/
+          // Use Docker pipeline plugin or dedicated tools for building and pushing images
+          docker build -t comingsoon-image .
+          docker login -u $DOCKERHUB_CREDENTIALS_USR, --password-stdin < credentials('dockerhub-credentials')
+          docker push comingsoon-image
+        """
+      }
+    }
+
+    stage('Minikube Cluster Management') {
       when { // Check if cluster exists and use conditional logic
         expression {
           return sh(script: 'minikube status | grep -q Running', returnStdout: true) == 0
