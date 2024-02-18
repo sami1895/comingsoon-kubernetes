@@ -28,7 +28,7 @@ pipeline {
             steps {
                   sh """
                   eksctl create cluster --name comingsoon-cluster --nodes-min=2
-                  aws eks update-kubeconfig --name comingsoon-cluster
+                  eks update-kubeconfig --name comingsoon-cluster
                   """
                 }
             }
