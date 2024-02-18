@@ -10,7 +10,6 @@ pipeline {
               sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
             }
         }
-    }
         stage('Build & push Dockerfile') {
             steps {
               sh """
@@ -28,7 +27,7 @@ pipeline {
         stage('Create Cluster') {
             steps {
                   sh """
-                  eksctl create cluster --name comingsoon-cluster --nodes-min=2
+                  "minikube delete -p comingsoon-cluster --nodes-min=2"
                   aws eks update-kubeconfig --name comingsoon-cluster
                   """
                 }
