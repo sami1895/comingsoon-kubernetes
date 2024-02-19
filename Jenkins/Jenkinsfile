@@ -20,7 +20,7 @@ pipeline {
         }
         stage('Delete Cluster') {
             steps {
-                  sh "eksctl delete cluster --name comingsoon-cluster"
+                  sh "kubectl delete cluster --name comingsoon-cluster"
                   sleep(time: 180, unit: "SECONDS")
                 }
             }
