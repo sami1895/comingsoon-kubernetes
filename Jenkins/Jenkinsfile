@@ -20,7 +20,7 @@ pipeline {
         }
         stage('Delete Cluster') {
             steps {
-                  sh "kubectl delete cluster --name comingsoon-cluster"
+                  sh "minikube delete -p comingsoon-cluster"
                   sleep(time: 180, unit: "SECONDS")
                 }
             }
