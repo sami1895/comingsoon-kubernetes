@@ -27,7 +27,7 @@ pipeline {
         stage('Create Cluster') {
             steps {
                   sh """
-                  "minikube start -p comingsoon-cluster --nodes=2"
+                  "minikube start -p comingsoon-cluster"
                   """
                 }
             }
@@ -39,7 +39,7 @@ pipeline {
         stage('Deploy') {
             steps {
                   sh """
-                  cd Kubernetes/comingsoon/k8s
+                  cd comingsoon/k8s
                   kubectl -n comingsoon apply -f deployment.yaml
                   kubectl -n comingsoon apply -f services.yaml
                   """
