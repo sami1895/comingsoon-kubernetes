@@ -28,7 +28,6 @@ pipeline {
             steps {
                   sh """
                   "minikube delete -p comingsoon-cluster --nodes-min=2"
-                  aws eks update-kubeconfig --name comingsoon-cluster
                   """
                 }
             }
